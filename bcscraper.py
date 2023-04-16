@@ -1,9 +1,9 @@
 import os
-import glob
 import re
 import subprocess
 import argparse
 
+from glob import glob
 from json import loads
 from requests import get
 from time import sleep
@@ -13,10 +13,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from random import randint
 
 
-DOWNLOAD_LIMIT = 125
+DOWNLOAD_LIMIT = 75
 
 
 class Tralbum():
@@ -46,12 +48,27 @@ class Tralbum():
                 self.is_free = True
         
     def _get_json(self, data_field):
-        html = requests.get(self.url).content.decode('utf-8')
+        html = get(self.url).content.decode('utf-8')
         doc = bs(html, 'html.parser')
         tag = doc.find("script", {data_field: True})
-        json_data = json.loads(tag[data_field])
+        json_data = loads(tag[data_field])
         return json_data
 
+    def _get_element(self, driver, locate_by, ref):
+        wait = WebDriverWait(driver, 20)
+        if locate_by == 'xp':
+            return wait.until(
+                EC.visibility_of_element_located((By.XPATH, ref))
+            )
+        if locate_by == 'css':
+            return wait.until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, ref))
+            )
+        if locate_by == 'id':
+            return wait.until(
+                EC.visibility_of_element_located((By.ID, ref))
+            )
+    
     def download(self, driver, email_address='', postal_code='95014'):
         download_link_ref = "button.download-link.buy-link"
         email_button_ref = "//div[@id='downloadButtons_email']/div/button"
@@ -60,18 +77,16 @@ class Tralbum():
 
         if self.download_url:
             driver.get(self.download_url)
-            time.sleep(5)
-            driver.find_element(By.XPATH, download_button_ref).click()
+            self._get_element(driver, 'xp', download_button_ref).click()
 
         elif self.email_required and self.is_free and email_address:
             driver.get(self.url)
-            driver.find_element(By.CSS_SELECTOR, download_link_ref).click() 
-            driver.find_element(By.ID, "userPrice").send_keys("0")
-            time.sleep(2)
-            driver.find_element(By.CSS_SELECTOR, free_download_ref).click()
-            driver.find_element(By.ID, "fan_email_address").send_keys(email_address)
-            driver.find_element(By.ID, "fan_email_postalcode").send_keys(postal_code)
-            driver.find_element(By.XPATH, email_button_ref).click()
+            self._get_element(driver, 'css', download_link_ref).click()
+            self._get_element(driver, 'id', "userPrice").send_keys("0")
+            self._get_element(driver, 'css', free_download_ref).click()
+            self._get_element(driver, 'id', "fan_email_address").send_keys(email_address)
+            self._get_element(driver, 'id', "fan_email_postalcode").send_keys(postal_code)
+            self._get_element(driver, 'xp', email_button_ref).click()
 
 
 class BandcampScraper():
@@ -105,7 +120,7 @@ class BandcampScraper():
         options.add_experimental_option('prefs', prefs)
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         service = Service(self.chromedriver_path)
-        service.creationflags = subprocess.CREATE_NO_WINDOW
+#        service.creationflags = subprocess.CREATE_NO_WINDOW
         driver = webdriver.Chrome(options=options, service=service)
         return driver
 
@@ -129,10 +144,10 @@ class BandcampScraper():
 
     def _is_downloaded(self, tralbum_id):
         tralbum = self.tralbums[tralbum_id]
-        time.sleep(3)
+        sleep(3)
         while True:
-            time.sleep(1)
-            if glob.glob(f'{tralbum.artist} - {tralbum.title}*.crdownload'):
+            sleep(1)
+            if glob(f'{tralbum.artist} - {tralbum.title}*.crdownload'):
                 continue
             return True
 
@@ -261,14 +276,14 @@ def is_valid_url(url):
     regex = '^(http|https)://[a-zA-Z0-9][a-zA-Z0-9\-]+[a-zA-Z0-9].bandcamp.com/(((album|track)/[a-zA-Z0-9\-]+)|music)$'
     if not re.fullmatch(regex, url):
         return False
-    returned_status_code = requests.get(url, allow_redirects=False).status_code     
+    returned_status_code = get(url, allow_redirects=False).status_code     
     if not returned_status_code == 200:
         return False
     return True
 
 
 def get_discog(discog_url):
-    doc = bs(requests.get(discog_url).content, 'html.parser')
+    doc = bs(get(discog_url).content, 'html.parser')
     album_grid = doc.select("li.music-grid-item")
     urls = []
 
@@ -283,9 +298,9 @@ def parse_file(file, parser):
     print(f'Parsing "{file.name}"')
     urls = []
     lines = [a.strip() for a in file.readlines()]
-    if len(lines) > DOWNLOAD_LIMIT:
-        parser.error(f'found more than {DOWNLOAD_LIMIT} urls in file, limit exceeded')
     for line in lines:
+        if not line:
+            continue
         print(f'  Validating "{line}" ... ', end='\r')
         if not is_valid_url(line):
             print(f'  Validating "{line}" ... invalid')
@@ -297,11 +312,11 @@ def parse_file(file, parser):
             print(f'  Getting discography from "{line}" ... done')
         else:
             urls.append(line)
+        if len(urls) > DOWNLOAD_LIMIT:
+            parser.error(f'found more than {DOWNLOAD_LIMIT} urls in file, limit exceeded')
+            return
 
     urls = list(dict.fromkeys(urls))
-    if len(urls) > DOWNLOAD_LIMIT:
-        parser.error(f'found more than {DOWNLOAD_LIMIT} urls in file, limit exceeded')
-        return
     print(f'Validated {len(urls)} url(s)')
     return urls
         
