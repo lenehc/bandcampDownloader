@@ -96,12 +96,12 @@ class BandcampScraper():
 
         self.tralbums = {}
 
-        print('Extracting data')
+        print('Fetching data')
 
         for url in urls:
-            print(f'  Extracting data from "{url}" ... ', end='\r')
+            print(f'  Fetching data from "{url}" ... ', end='\r')
             tralbum = Tralbum(url)
-            print(f'  Extracting data from "{url}" ... done')
+            print(f'  Fetching data from "{url}" ... done')
             self.tralbums[tralbum.id] = tralbum
 
         print(f'Fetched {len(self.tralbums)} item(s)')
