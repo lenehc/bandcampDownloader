@@ -2,8 +2,6 @@ import os
 import argparse
 import re
 
-from pathvalidate.argparse import validate_filepath_arg
-from tqdm import tqdm
 from glob import glob
 from json import loads
 from requests import get
