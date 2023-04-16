@@ -1,8 +1,7 @@
 import os
-import re
-import subprocess
 import argparse
 
+from re import fullmatch
 from glob import glob
 from json import loads
 from requests import get
@@ -18,7 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from random import randint
 
 
-DOWNLOAD_LIMIT = 75
+DOWNLOAD_LIMIT = 125
 
 
 class Tralbum():
@@ -116,11 +115,9 @@ class BandcampScraper():
         prefs = {'download.default_directory' : self.download_path}
         options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')
-        options.add_argument('--log-level=3')
         options.add_experimental_option('prefs', prefs)
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         service = Service(self.chromedriver_path)
-#        service.creationflags = subprocess.CREATE_NO_WINDOW
         driver = webdriver.Chrome(options=options, service=service)
         return driver
 
@@ -155,7 +152,7 @@ class BandcampScraper():
         email_address = input('(Enter email address) ')
         regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
         
-        if re.fullmatch(regex, email_address):
+        if fullmatch(regex, email_address):
             return email_address
 
         print("Invalid email address")
@@ -274,7 +271,7 @@ class BandcampScraper():
         
 def is_valid_url(url):
     regex = '^(http|https)://[a-zA-Z0-9][a-zA-Z0-9\-]+[a-zA-Z0-9].bandcamp.com/(((album|track)/[a-zA-Z0-9\-]+)|music)$'
-    if not re.fullmatch(regex, url):
+    if not fullmatch(regex, url):
         return False
     returned_status_code = get(url, allow_redirects=False).status_code     
     if not returned_status_code == 200:
