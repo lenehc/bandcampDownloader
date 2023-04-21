@@ -5,7 +5,7 @@ Overview
 --------
 
 
-bcdownloader.py automates the downloading of free albums, tracks, or entire artist discographies from Bandcamp.com. Given a file containing urls, the program either downloads the album if it can, or sends the album to a given email address if possible.
+bcdownloader.py automates the downloading of free albums, tracks, or entire artist discographies from Bandcamp. Given a file containing urls, the program either downloads the album if it can, or sends the album to a given email address if possible.
 
 Usage
 -----
