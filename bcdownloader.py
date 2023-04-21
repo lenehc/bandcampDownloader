@@ -11,6 +11,7 @@ from json import loads
 from time import gmtime, strftime
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -20,6 +21,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 DOWNLOADED, EMAIL, FAILED = 0, 0, 0
+
+FILE_FORMATS = ['mp3-v0','mp3-320','flac','aac-hi','vorbis','alac','wav','aiff-lossless']
 
 DOWNLOAD_PATH = os.path.join(os.getcwd(), f'bcscraper_{strftime("%Y%m%d%H%M%S", gmtime())}')
 STATUS = '\n{} downloaded items, {} email required items, {} failed items'
@@ -35,10 +38,11 @@ DOWNLOAD_BUTTON_REF = "//a[@data-bind='attr: { href: downloadUrl }, visible: dow
     
 
 class BandcampDownloader():
-    def __init__(self, file, chromedriver_path, email_address):
+    def __init__(self, file, chromedriver_path, email_address, file_format):
         self.urls = self._parse_file(file)
         self.driver = self._run_chromedriver(chromedriver_path)
         self.email_address = email_address
+        self.file_format = file_format
 
     def _get_tralbum_info(self, url):
         doc = bs(requests.get(url).content.decode('utf-8'), 'html.parser')
@@ -124,6 +128,9 @@ class BandcampDownloader():
         if info['download_url'] and info['is_downloadable']:
             DOWNLOADED += 1
             self.driver.get(info['download_url'])
+            if self.file_format:
+                select = Select(self._get_element('id', "format-type"))
+                select.select_by_value(self.file_format)
             self._get_element('xp', DOWNLOAD_BUTTON_REF).click()
             return
 
@@ -167,28 +174,36 @@ def email_address(email_address):
 
     raise argparse.ArgumentTypeError('invalid email address')
     
+def file_format(format):
+    if format in FILE_FORMATS:
+        return format
+
+    raise argparse.ArgumentTypeError(f'invalid file format, choose from: {", ".join(FILE_FORMATS)}')
 
 def main():
     logging.basicConfig(format='%(levelname)s: %(message)s')
     logging.addLevelName(logging.ERROR, 'error')
 
-    parser = argparse.ArgumentParser()
+    usage = 'bcdownloader.py [filename] [chromedriver-path] [-e email-address] [-f file-format]'
+    parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('file',
                         type=argparse.FileType('r'),
-                        metavar='FILE',
-                        help='name of file containing urls')
+                        metavar='filename')
     parser.add_argument('chromedriver_path',
                         type=chromedriver_path,
-                        metavar='CHROMEDRIVER PATH',
-                        help='path to chromedriver.exe')
-    parser.add_argument('-e', '--email_address',
+                        metavar='chromedriver-path')
+    parser.add_argument('-e', '--email-address',
                         dest="email_address",
                         type=email_address,
-                        metavar='EMAIL ADDRESS')
+                        metavar='email-address')
+    parser.add_argument('-f', '--file-format',
+                        dest="file_format",
+                        type=file_format,
+                        metavar='file-format')
 
     args = parser.parse_args()
 
-    BandcampDownloader(args.file, args.chromedriver_path, args.email_address).run()
+    BandcampDownloader(args.file, args.chromedriver_path, args.email_address, args.file_format).run()
 
 if __name__ == '__main__':
     main()
