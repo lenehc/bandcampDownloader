@@ -137,12 +137,12 @@ class BandcampDownloader():
         elif info['email_required'] and info['is_downloadable'] and self.email_address:
             EMAIL += 1
             self.driver.get(url)
-            self._get_element('css', download_link_ref).click()
+            self._get_element('css', DOWNLOAD_LINK_REF).click()
             self._get_element('id', "userPrice").send_keys("0")
-            self._get_element('css', free_download_ref).click()
+            self._get_element('css', FREE_DOWNLOAD_REF).click()
             self._get_element('id', "fan_email_address").send_keys(self.email_address)
             self._get_element('id', "fan_email_postalcode").send_keys('95014')
-            self._get_element('xp', email_button_ref).click()
+            self._get_element('xp', EMAIL_BUTTON_REF).click()
             return
         
         FAILED += 1
