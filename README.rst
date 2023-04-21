@@ -4,27 +4,19 @@ bcscraper.py
 Overview
 --------
 
-bcscraper.py uses BeautifulSoup and Selenium to download albums, tracks, or entire artist discographies from Bandcamp.com, given a source file containing the urls leading to the desired album pages.
 
-URL: https://github.com/lenehc/bcscraper.py
-
-Installation
-------------
-
-Via github:
-
-    git clone https://github.com/lenehc/bcscraper.py
+bcdownloader.py automates the downloading of free albums, tracks, or entire artist discographies from Bandcamp.com. Given a file containing urls, the program either downloads the album if it can, or sends the album to a given email address if possible.
 
 Usage
 -----
 
 ::
     
-    $ bcscraper.py [filename]
+    $ bcdownloader.py [filename] [chromedriver-path] [-e email-address] [-f file-format]
 
 For details run::
 
-    $ bcscraper.py -h
+    $ bcdownloader.py -h
 
 License
 -------
