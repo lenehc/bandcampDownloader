@@ -231,18 +231,18 @@ def main():
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('file',
                         type=argparse.FileType('r'),
-                        metavar='filename')
+                        help='input filename, one url per line')
     parser.add_argument('chromedriver_path',
                         type=chromedriver_path,
-                        metavar='chromedriver-path')
+                        help='path to chromedriver.exe')
     parser.add_argument('-e', '--email-address',
                         dest="email_address",
                         type=email_address,
-                        metavar='email-address')
+                        help='email address string, if omitted email required albums will not be downloaded')
     parser.add_argument('-f', '--file-format',
                         dest="file_format",
                         type=file_format,
-                        metavar='file-format')
+                        help=f'file format for albums and tracks, if omitted files will be downloaded in: {FILE_FORMATS[0]}')
 
     args = parser.parse_args()
 
