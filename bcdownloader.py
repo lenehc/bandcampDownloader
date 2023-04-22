@@ -38,6 +38,9 @@ DOWNLOAD_BUTTON_REF = "//a[@data-bind='attr: { href: downloadUrl }, visible: dow
     
 
 class BandcampDownloader():
+    '''
+    Main class for downloading process
+    '''
     def __init__(self, file, chromedriver_path, email_address, file_format):
         self.urls = self._parse_file(file)
         self.driver = self._run_chromedriver(chromedriver_path)
@@ -45,6 +48,12 @@ class BandcampDownloader():
         self.file_format = file_format
 
     def _get_tralbum_info(self, url):
+        '''
+        Get page html from url and search for the data-tralbum
+        attribute in a script tag, this is where the tralbum info is
+        stored.
+        Extract relevant data to dictionnary element
+        '''
         doc = bs(requests.get(url).content.decode('utf-8'), 'html.parser')
         tag = doc.find("script", {'data-tralbum': True})
         data = loads(tag['data-tralbum'])
@@ -61,6 +70,9 @@ class BandcampDownloader():
         return info
 
     def _run_chromedriver(self, chromedriver_path):
+        '''
+        Start Chromedriver and return webdriver object
+        '''
         prefs = {'download.default_directory' : DOWNLOAD_PATH}
         options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')
@@ -72,6 +84,9 @@ class BandcampDownloader():
         return driver
 
     def _get_element(self, by, ref):
+        '''
+        Wait for visibility of element before returning it
+        '''
         wait = WebDriverWait(self.driver, 20)
 
         if by == 'xp':
@@ -84,12 +99,20 @@ class BandcampDownloader():
             return wait.until(EC.visibility_of_element_located((By.ID, ref)))
 
     def _get_artist_urls(self, url):
+        '''
+        Parse artist discography page for album and track urls
+        '''
         doc = bs(requests.get(url + 'music').content, 'html.parser')
         urls = doc.find_all("a", href=TRALBUM_URL_PATTERN)
 
         return [f"{url[:-1]}{a['href']}" for a in urls]
 
     def _parse_file(self, file):
+        '''
+        Iterate over each line in file and log error if url is
+        invalid.
+        Return list of urls, with no duplicates
+        '''
         urls = []
 
         for i,line in enumerate(file):
@@ -114,6 +137,10 @@ class BandcampDownloader():
         return list(set(urls))
  
     def _wait_for_download(self):
+        '''
+        Continuously iterate over download dir until no *.crdownload
+        or *.tmp files are found
+        '''
         sleep(3)
 
         while True:
@@ -122,6 +149,11 @@ class BandcampDownloader():
                 return
 
     def get_tralbum(self, url):
+        '''
+        If a download url was found, download the tralbum, otherwise
+        if it requires an email address, send the email to the
+        provided email address, otherwise skip
+        '''
         global DOWNLOADED, EMAIL
         info = self._get_tralbum_info(url)
 
@@ -148,6 +180,9 @@ class BandcampDownloader():
         FAILED += 1
 
     def run(self):
+        '''
+        Run download process
+        '''
         os.mkdir(DOWNLOAD_PATH)
         os.chdir(DOWNLOAD_PATH)
 
@@ -160,6 +195,9 @@ class BandcampDownloader():
         
 
 def chromedriver_path(path):
+    '''
+    Argparse type function for chromedriver path
+    '''
     if os.path.exists(path) and os.path.basename(path) == 'chromedriver.exe':
         return path
 
@@ -167,6 +205,9 @@ def chromedriver_path(path):
 
     
 def email_address(email_address):
+    '''
+    Argparse type function for email address
+    '''
     regex = "([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
 
     if re.fullmatch(regex, email_address):
@@ -175,12 +216,19 @@ def email_address(email_address):
     raise argparse.ArgumentTypeError('invalid email address')
     
 def file_format(format):
+    '''
+    Argparse type function for file format
+    '''
     if format in FILE_FORMATS:
         return format
 
     raise argparse.ArgumentTypeError(f'invalid file format, choose from: {", ".join(FILE_FORMATS)}')
 
 def main():
+    '''
+    Setup Argparse and logging and pass options to a new instance of
+    BandcampDownloader
+    '''
     logging.basicConfig(format='%(levelname)s: %(message)s')
     logging.addLevelName(logging.ERROR, 'error')
 
