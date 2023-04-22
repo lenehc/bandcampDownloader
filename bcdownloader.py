@@ -184,7 +184,7 @@ def main():
     logging.basicConfig(format='%(levelname)s: %(message)s')
     logging.addLevelName(logging.ERROR, 'error')
 
-    usage = 'bcdownloader.py [filename] [chromedriver-path] [-e email-address] [-f file-format]'
+    usage = 'bcdownloader.py [-h] [filename] [chromedriver-path] [-e email-address] [-f file-format]'
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('file',
                         type=argparse.FileType('r'),
