@@ -39,8 +39,9 @@ DOWNLOAD_BUTTON_REF = "//a[@data-bind='attr: { href: downloadUrl }, visible: dow
 
 class BandcampDownloader():
     '''
-    Main class for downloading process
+    Main class for downloader
     '''
+
     def __init__(self, file, chromedriver_path, email_address, file_format):
         self.urls = self._parse_file(file)
         self.driver = self._run_chromedriver(chromedriver_path)
@@ -49,10 +50,8 @@ class BandcampDownloader():
 
     def _get_tralbum_info(self, url):
         '''
-        Get page html from url and search for the data-tralbum
-        attribute in a script tag, this is where the tralbum info is
-        stored.
-        Extract relevant data to dictionnary element
+        Get tralbum info from page html. Extract relevant data to
+        dict element
         '''
         doc = bs(requests.get(url).content.decode('utf-8'), 'html.parser')
         tag = doc.find("script", {'data-tralbum': True})
@@ -71,7 +70,7 @@ class BandcampDownloader():
 
     def _run_chromedriver(self, chromedriver_path):
         '''
-        Start Chromedriver and return webdriver object
+        Start Chromedriver, return webdriver object
         '''
         prefs = {'download.default_directory' : DOWNLOAD_PATH}
         options = webdriver.ChromeOptions()
@@ -85,7 +84,7 @@ class BandcampDownloader():
 
     def _get_element(self, by, ref):
         '''
-        Wait for visibility of element before returning it
+        Wait for visibility of element
         '''
         wait = WebDriverWait(self.driver, 20)
 
@@ -109,9 +108,7 @@ class BandcampDownloader():
 
     def _parse_file(self, file):
         '''
-        Iterate over each line in file and log error if url is
-        invalid.
-        Return list of urls, with no duplicates
+        Iterate over file and log error if line is invalid
         '''
         urls = []
 
@@ -150,9 +147,7 @@ class BandcampDownloader():
 
     def get_tralbum(self, url):
         '''
-        If a download url was found, download the tralbum, otherwise
-        if it requires an email address, send the email to the
-        provided email address, otherwise skip
+        Download tralbum or send email to email address
         '''
         global DOWNLOADED, EMAIL
         info = self._get_tralbum_info(url)
@@ -181,7 +176,7 @@ class BandcampDownloader():
 
     def run(self):
         '''
-        Run download process
+        Start download process
         '''
         os.mkdir(DOWNLOAD_PATH)
         os.chdir(DOWNLOAD_PATH)
@@ -226,9 +221,9 @@ def file_format(format):
 
 def main():
     '''
-    Setup Argparse and logging and pass options to a new instance of
-    BandcampDownloader
+    Setup Argparse and logging and pass options to BandcampDownloader
     '''
+    
     logging.basicConfig(format='%(levelname)s: %(message)s')
     logging.addLevelName(logging.ERROR, 'error')
 
