@@ -26,7 +26,7 @@ DOWNLOADED, EMAIL, FAILED = 0, 0, 0
 
 FILE_FORMATS = ['mp3-v0','mp3-320','flac','aac-hi','vorbis','alac','wav','aiff-lossless']
 
-DOWNLOAD_PATH = os.path.join(os.getcwd(), f'bcscraper_{strftime("%Y%m%d%H%M%S", gmtime())}')
+DOWNLOAD_PATH = os.path.join(os.getcwd(), f'bcdownloader_{strftime("%Y%m%d%H%M%S", gmtime())}')
 STATUS = '{} downloaded, {} email required, {} failed'
 
 ARTIST_URL_PATTERN = re.compile(r'^https://[a-zA-z0-9\-]+.bandcamp.com/$')
@@ -128,12 +128,12 @@ class BandcampDownloader():
 
         return list(set(urls))
  
-    def _is_download(self):
+    def _is_downloaded(self):
         '''
         Continuously iterate over download dir until no *.crdownload
         or *.tmp files are found, return false after 3 minutes
         '''
-        sleep(1)
+        sleep(3)
 
         for i in range(DOWNLOAD_ABORT_LIMIT):
             sleep(1)
