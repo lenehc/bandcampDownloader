@@ -162,7 +162,6 @@ class BandcampDownloader():
                 FAILED += 1
                 print(f'  TIMEOUT     {url}')
                 return
-                `
 
         elif info['email_required'] and info['is_downloadable'] and info['is_free']:
             EMAIL += 1
