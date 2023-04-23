@@ -44,7 +44,7 @@ class BandcampDownloader():
     Main class for downloader
     '''
 
-    def __init__(self, file, chromedriver_path, email_address, file_format):
+    def __init__(self, file, chromedriver_path, email_address='', file_format=''):
         self.urls = self._parse_file(file)
         self.driver = self._run_chromedriver(chromedriver_path)
         self.email_address = email_address
@@ -158,6 +158,11 @@ class BandcampDownloader():
                 DOWNLOADED += 1
                 print(f'  DOWNLOADED  {url}')
                 return
+            else:
+                FAILED += 1
+                print(f'  TIMEOUT     {url}')
+                return
+                `
 
         elif info['email_required'] and info['is_downloadable'] and info['is_free']:
             EMAIL += 1
