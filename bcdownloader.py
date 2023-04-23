@@ -20,6 +20,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+DOWNLOAD_ABORT_LIMIT = 180
+
 DOWNLOADED, EMAIL, FAILED = 0, 0, 0
 
 FILE_FORMATS = ['mp3-v0','mp3-320','flac','aac-hi','vorbis','alac','wav','aiff-lossless']
@@ -32,10 +34,10 @@ TRALBUM_FULL_URL_PATTERN = re.compile(r'^https://[a-zA-z0-9\-]+.bandcamp.com/(tr
 TRALBUM_URL_PATTERN = re.compile(r"^/(album|track)")
 
 DOWNLOAD_LINK_REF = "button.download-link.buy-link"
-EMAIL_BUTTON_REF = "//div[@id='downloadButtons_email']/div/button"
+EMAIL_BUTTON_REF = "#downloadButtons_email > div:nth-child(1) > button:nth-child(1)"
 FREE_DOWNLOAD_REF = "a.download-panel-free-download-link"
-DOWNLOAD_BUTTON_REF = "//a[@data-bind='attr: { href: downloadUrl }, visible: downloadReady() && !downloadError()']"
-    
+DOWNLOAD_BUTTON_REF = "div.download-format-tmp > a:nth-child(5)"
+
 
 class BandcampDownloader():
     '''
@@ -82,20 +84,13 @@ class BandcampDownloader():
 
         return driver
 
-    def _get_element(self, by, ref):
+    def _get_element(self, ref):
         '''
         Wait for visibility of element
         '''
         wait = WebDriverWait(self.driver, 20)
 
-        if by == 'xp':
-            return wait.until(EC.visibility_of_element_located((By.XPATH, ref)))
-
-        if by == 'css':
-            return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ref)))
-
-        if by == 'id':
-            return wait.until(EC.visibility_of_element_located((By.ID, ref)))
+        return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ref)))
 
     def _get_artist_urls(self, url):
         '''
@@ -133,17 +128,18 @@ class BandcampDownloader():
 
         return list(set(urls))
  
-    def _wait_for_download(self):
+    def _is_download(self):
         '''
         Continuously iterate over download dir until no *.crdownload
-        or *.tmp files are found
+        or *.tmp files are found, return false after 3 minutes
         '''
         sleep(1)
 
-        while True:
+        for i in range(DOWNLOAD_ABORT_LIMIT):
             sleep(1)
             if not glob('*.crdownload') or glob('*.tmp'):
-                return
+                return True
+        return False
 
     def get_tralbum(self, url):
         '''
@@ -153,33 +149,33 @@ class BandcampDownloader():
         info = self._get_tralbum_info(url)
 
         if info['download_url'] and info['is_downloadable']:
-            DOWNLOADED += 1
             self.driver.get(info['download_url'])
             if self.file_format:
-                select = Select(self._get_element('id', "format-type"))
+                select = Select(self._get_element("#format-type"))
                 select.select_by_value(self.file_format)
-            self._get_element('xp', DOWNLOAD_BUTTON_REF).click()
-            self._wait_for_download()
-            print(f'  DOWNLOADED  {url}')
-            return
+            self._get_element(DOWNLOAD_BUTTON_REF).click()
+            if self._is_downloaded():
+                DOWNLOADED += 1
+                print(f'  DOWNLOADED  {url}')
+                return
 
         elif info['email_required'] and info['is_downloadable'] and info['is_free']:
             EMAIL += 1
             if self.email_address:
                 self.driver.get(url)
-                self._get_element('css', DOWNLOAD_LINK_REF).click()
-                self._get_element('id', "userPrice").send_keys("0")
-                self._get_element('css', FREE_DOWNLOAD_REF).click()
-                self._get_element('id', "fan_email_address").send_keys(self.email_address)
-                self._get_element('id', "fan_email_postalcode").send_keys('95014')
-                self._get_element('xp', EMAIL_BUTTON_REF).click()
+                self._get_element(DOWNLOAD_LINK_REF).click()
+                self._get_element("#userPrice").send_keys("0")
+                self._get_element(FREE_DOWNLOAD_REF).click()
+                self._get_element("#fan_email_address").send_keys(self.email_address)
+                self._get_element("#fan_email_postalcode").send_keys('95014')
+                self._get_element(EMAIL_BUTTON_REF).click()
                 print(f'  SENT-EMAIL  {url}')
             else:
                 print(f'  EMAIL-REQ   {url}')
             return
         
-        print(f'  FAILED      {url}')
         FAILED += 1
+        print(f'  FAILED      {url}')
 
     def run(self):
         '''
@@ -189,10 +185,10 @@ class BandcampDownloader():
         os.chdir(DOWNLOAD_PATH)
 
         for i,url in enumerate(self.urls):
-            print(f'Getting items - {i+1}/{len(self.urls)}', end='\r')
+            print(f'Fetching: {i+1} of {len(self.urls)}', end='\r')
             self.get_tralbum(url)
 
-        print(f'\nFetched {len(self.urls)} items')
+        print(f'\nFetched {len(self.urls)} item(s)')
         print(STATUS.format(DOWNLOADED, EMAIL, FAILED))
         
 
