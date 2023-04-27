@@ -5,10 +5,9 @@ import requests
 import logging
 
 from glob import glob
-from time import sleep
 from sys import exit
 from json import loads
-from time import gmtime, strftime
+from time import sleep, gmtime, strftime
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
