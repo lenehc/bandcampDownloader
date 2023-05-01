@@ -1,6 +1,6 @@
 ## Overview
 
-Given a file containing urls, the program either downloads the album if it can, or sends the album to a given email address if possible, only works for free items.
+Given a file containing urls, the program either downloads the album if it can, or sends the album to a given email address if possible, only works for free items (May not work on WSL due to incompatibility issues with Python Selenium).
 
 ## Usage
 
