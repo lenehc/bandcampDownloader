@@ -1,0 +1,1 @@
+Usage: bcdownloader.py <file> <chromedriver-path> [-e email-address] [-f file-format]
